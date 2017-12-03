@@ -11,6 +11,11 @@ public class DnDListener implements MouseListener, MouseMotionListener {
 	private QPiece[][] boardArray = new QPiece[4][4];
 	private QuartoGame quartoGame;
 	
+	private String p1 = "";
+	private String p2 = "";
+	private int charNum = 0;
+	private int mode = 0;
+	
 	private static final int startX = 130; //Where the first slot (top left) is
 	private static final int startY = 145;
 	private static final int offset = 82; // distance between slots, both vertical and horizontal
@@ -27,10 +32,18 @@ public class DnDListener implements MouseListener, MouseMotionListener {
 		this.quartoGame = quartoGame;
 	}
 	
+	public void updateDnD() {
+		String[] playerNames = quartoGame.getPlayerNames();
+		int[] gameInfo = quartoGame.getGameInfo();
+		p1 = playerNames[0];
+		p2 = playerNames[1];
+		charNum = gameInfo[0];
+		mode = gameInfo[1];
+	}
+	
 	public void mousePressed(MouseEvent e) {
 		int x = e.getX();
 	    int y = e.getY();
-		//System.out.println("X: " + x + " Y: " + y); //testing where the slots are on the board
 	    for (QPiece qPiece : this.qPieces) {
 			if (mouseOverPiece(qPiece, x, y) && !qPiece.getInSlot()) {
 				this.xDragOffset = x - qPiece.getX();
@@ -47,107 +60,190 @@ public class DnDListener implements MouseListener, MouseMotionListener {
 		int typeSum = 0;
 		int heightSum = 0;
 		int holinessSum = 0;
+		int totalCount = 0;
 		
-		for (int i = 0; i < 4; ++i) { //Check Columns
+		if (mode == 1 || mode == 3) { //CHECK LINEAR
+			for (int i = 0; i < 4; ++i) { //Check Columns
+				colorSum = 0;
+				typeSum = 0;
+				heightSum = 0;
+				holinessSum = 0;
+				totalCount = 0;
+				for (int j = 1; j < 4; ++j) { //Starting with 2nd in column, check quality equivalence
+					if (board[i][j] != null && board[i][0] != null) {
+						if (board[i][0].getColor() == board[i][j].getColor()) {
+							++colorSum;
+						}
+						if (board[i][0].getType() == board[i][j].getType()) {
+							++typeSum;
+						}
+						
+						if (board[i][0].getPHeight() == board[i][j].getPHeight()) {
+							++heightSum;
+						}
+						if (board[i][0].getHoliness() == board[i][j].getHoliness()) {
+							++holinessSum;
+						}
+					}
+				}
+				/*
+				if (colorSum == 3 || typeSum == 3 || heightSum == 3 || holinessSum == 3) {
+					return true;
+				}*/
+				if (colorSum == 3) {++totalCount;}
+				if (heightSum == 3) {++totalCount;}
+				if (typeSum == 3) {++totalCount;}
+				if (holinessSum == 3) {++totalCount;}
+				if (totalCount >= charNum) {return true;}
+			}
+			
+			for (int j = 0; j < 4; ++j) { //Check Rows
+				colorSum = 0;
+				typeSum = 0;
+				heightSum = 0;
+				holinessSum = 0;
+				totalCount = 0;
+				for (int i = 1; i < 4; ++i) { //Starting with 2nd in row, check quality equivalence
+					if (board[i][j] != null && board[0][j] != null) {
+						if (board[0][j].getColor() == board[i][j].getColor()) {
+							++colorSum;
+						}
+						if (board[0][j].getType() == board[i][j].getType()) {
+							++typeSum;
+						}
+						if (board[0][j].getPHeight() == board[i][j].getPHeight()) {
+							++heightSum;
+						}
+						if (board[0][j].getHoliness() == board[i][j].getHoliness()) {
+							++holinessSum;
+						}
+					}
+				}
+				if (colorSum == 3) {++totalCount;}
+				if (heightSum == 3) {++totalCount;}
+				if (typeSum == 3) {++totalCount;}
+				if (holinessSum == 3) {++totalCount;}
+				if (totalCount >= charNum) {return true;}
+			}
+			
 			colorSum = 0;
 			typeSum = 0;
 			heightSum = 0;
 			holinessSum = 0;
-			for (int j = 1; j < 4; ++j) { //Starting with 2nd in column, check quality equivalence
-				if (board[i][j] != null && board[i][0] != null) {
-					if (board[i][0].getColor() == board[i][j].getColor()) {
+			totalCount = 0;
+			for (int i = 1; i < 4; ++i) { //Check Diagonal l->r
+				if (board[i][i] != null && board[0][0] != null) {
+					if (board[0][0].getColor() == board[i][i].getColor()) {
 						++colorSum;
 					}
-					if (board[i][0].getType() == board[i][j].getType()) {
+					if (board[0][0].getType() == board[i][i].getType()) {
 						++typeSum;
 					}
-					
-					if (board[i][0].getPHeight() == board[i][j].getPHeight()) {
+					if (board[0][0].getPHeight() == board[i][i].getPHeight()) {
 						++heightSum;
 					}
-					if (board[i][0].getHoliness() == board[i][j].getHoliness()) {
+					if (board[0][0].getHoliness() == board[i][i].getHoliness()) {
 						++holinessSum;
 					}
 				}
 			}
-			if (colorSum == 3 || typeSum == 3 || heightSum == 3 || holinessSum == 3) {
-				return true;
-			}
-		}
-		
-		for (int j = 0; j < 4; ++j) { //Check Rows
+			if (colorSum == 3) {++totalCount;}
+			if (heightSum == 3) {++totalCount;}
+			if (typeSum == 3) {++totalCount;}
+			if (holinessSum == 3) {++totalCount;}
+			if (totalCount >= charNum) {return true;}
+			
 			colorSum = 0;
 			typeSum = 0;
 			heightSum = 0;
 			holinessSum = 0;
-			for (int i = 1; i < 4; ++i) { //Starting with 2nd in row, check quality equivalence
-				if (board[i][j] != null && board[0][j] != null) {
-					if (board[0][j].getColor() == board[i][j].getColor()) {
+			totalCount = 0;
+			for (int i = 1; i < 4; ++i) { //Check Diagonal r->l
+				int j = 3 - i;
+				if (board[i][j] != null && board[0][3] != null) {
+					if (board[0][3].getColor() == board[i][j].getColor()) {
 						++colorSum;
 					}
-					if (board[0][j].getType() == board[i][j].getType()) {
+					if (board[0][3].getType() == board[i][j].getType()) {
 						++typeSum;
 					}
-					if (board[0][j].getPHeight() == board[i][j].getPHeight()) {
+					if (board[0][3].getPHeight() == board[i][j].getPHeight()) {
 						++heightSum;
 					}
-					if (board[0][j].getHoliness() == board[i][j].getHoliness()) {
+					if (board[0][3].getHoliness() == board[i][j].getHoliness()) {
 						++holinessSum;
 					}
 				}
 			}
-			if (colorSum == 3 || typeSum == 3 || heightSum == 3 || holinessSum == 3) {
-				return true;
-			}
+			if (colorSum == 3) {++totalCount;}
+			if (heightSum == 3) {++totalCount;}
+			if (typeSum == 3) {++totalCount;}
+			if (holinessSum == 3) {++totalCount;}
+			if (totalCount >= charNum) {return true;}
 		}
 		
-		colorSum = 0;
-		typeSum = 0;
-		heightSum = 0;
-		holinessSum = 0;
-		for (int i = 1; i < 4; ++i) { //Check Diagonal l->r
-			if (board[i][i] != null && board[0][0] != null) {
-				if (board[0][0].getColor() == board[i][i].getColor()) {
-					++colorSum;
-				}
-				if (board[0][0].getType() == board[i][i].getType()) {
-					++typeSum;
-				}
-				if (board[0][0].getPHeight() == board[i][i].getPHeight()) {
-					++heightSum;
-				}
-				if (board[0][0].getHoliness() == board[i][i].getHoliness()) {
-					++holinessSum;
+		if (mode == 2 || mode == 3) { //Square check
+			colorSum = 0;
+			typeSum = 0;
+			heightSum = 0;
+			holinessSum = 0;
+			
+			for (int i = 0; i < 3; ++i) {
+				for (int j = 0; j < 3; ++j) {
+					colorSum = 0;
+					typeSum = 0;
+					heightSum = 0;
+					holinessSum = 0;
+					totalCount = 0;
+					if (board[i][j] != null) {
+						//Color Check
+						if (board[i+1][j] != null && board[i][j].getColor() == board[i+1][j].getColor()) {
+							++colorSum;
+						}
+						if (board[i][j+1] != null && board[i][j].getColor() == board[i][j+1].getColor()) {
+							++colorSum;
+						}
+						if (board[i+1][j+1] != null && board[i][j].getColor() == board[i+1][j+1].getColor()) {
+							++colorSum;
+						}
+						//Height Check
+						if (board[i+1][j] != null && board[i][j].getPHeight() == board[i+1][j].getPHeight()) {
+							++heightSum;
+						}
+						if (board[i][j+1] != null && board[i][j].getPHeight() == board[i][j+1].getPHeight()) {
+							++heightSum;
+						}
+						if (board[i+1][j+1] != null && board[i][j].getPHeight() == board[i+1][j+1].getPHeight()) {
+							++heightSum;
+						}
+						//Type Check
+						if (board[i+1][j] != null && board[i][j].getType() == board[i+1][j].getType()) {
+							++typeSum;
+						}
+						if (board[i][j+1] != null && board[i][j].getType() == board[i][j+1].getType()) {
+							++typeSum;
+						}
+						if (board[i+1][j+1] != null && board[i][j].getType() == board[i+1][j+1].getType()) {
+							++typeSum;
+						}
+						//Holiness Check
+						if (board[i+1][j] != null && board[i][j].getHoliness() == board[i+1][j].getHoliness()) {
+							++holinessSum;
+						}
+						if (board[i][j+1] != null && board[i][j].getHoliness() == board[i][j+1].getHoliness()) {
+							++holinessSum;
+						}
+						if (board[i+1][j+1] != null && board[i][j].getHoliness() == board[i+1][j+1].getHoliness()) {
+							++holinessSum;
+						}
+					}
+					if (colorSum == 3) {++totalCount;}
+					if (heightSum == 3) {++totalCount;}
+					if (typeSum == 3) {++totalCount;}
+					if (holinessSum == 3) {++totalCount;}
+					if (totalCount >= charNum) {return true;}
 				}
 			}
-		}
-		if (colorSum == 3 || typeSum == 3 || heightSum == 3 || holinessSum == 3) {
-			return true;
-		}
-		
-		colorSum = 0;
-		typeSum = 0;
-		heightSum = 0;
-		holinessSum = 0;
-		for (int i = 1; i < 4; ++i) { //Check Diagonal r->l
-			int j = 3 - i;
-			if (board[i][j] != null && board[0][3] != null) {
-				if (board[0][3].getColor() == board[i][j].getColor()) {
-					++colorSum;
-				}
-				if (board[0][3].getType() == board[i][j].getType()) {
-					++typeSum;
-				}
-				if (board[0][3].getPHeight() == board[i][j].getPHeight()) {
-					++heightSum;
-				}
-				if (board[0][3].getHoliness() == board[i][j].getHoliness()) {
-					++holinessSum;
-				}
-			}
-		}
-		if (colorSum == 3 || typeSum == 3 || heightSum == 3 || holinessSum == 3) {
-			return true;
 		}
 		
 		return false;
@@ -193,10 +289,8 @@ public class DnDListener implements MouseListener, MouseMotionListener {
 			if (boardArray[row][col] == null) { //Add piece to board only if slot not filled
 				boardArray[row][col] = this.pieceDragged;
 				quartoGame.slotPiece(this.pieceDragged, row, col);
-				//System.out.println("Placed at: " + row + ", " + col);
-				//System.out.println(boardArray[row][col].getColor() + ", " + boardArray[row][col].getType() + ", " + boardArray[row][col].getPHeight() + ", " + boardArray[row][col].getHoliness());
 				this.pieceDragged.setInSlot(true);
-				//quartoGame.nextPlayer();
+				quartoGame.updatePlacement();
 			}
 			else {
 				p[0] = 380; //reset piece to some other place
@@ -236,23 +330,7 @@ public class DnDListener implements MouseListener, MouseMotionListener {
 				this.pieceDragged.setY(newP[1]);
 				this.quartoGame.repaint();
 				this.pieceDragged = null;
-				quartoGame.updatePlacement();
 			}
-			/*
-			QPiece[][] board= quartoGame.getBoardArray();
-			for (int i = 0; i < 4; ++i) {
-				for (int j = 0; j < 4; ++j) {
-					if (board[i][j] != null) {
-						System.out.print(board[i][j].getColor() + ", " + board[i][j].getType() + ", " + board[i][j].getPHeight() + ", " + board[i][j].getHoliness() + " | ");
-					}
-					else {
-						System.out.print("-, -, -, - | ");
-					}
-				}
-				System.out.println("");
-			}
-			System.out.println("");
-			*/
 		}
 	}
 	
@@ -270,7 +348,6 @@ public class DnDListener implements MouseListener, MouseMotionListener {
 		
 		if (x >= 150 && x <= 350 && y >= 850 && y <= 920) {
 	    	if (checkQuarto()) {
-	    		//System.out.println("Win!");
 	    		quartoGame.updateWin();
 	    		quartoGame.repaint();
 	    	}

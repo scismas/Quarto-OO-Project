@@ -8,6 +8,8 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.net.URL;
@@ -45,6 +47,9 @@ public class QuartoGame extends JPanel {
 	
 	private String playerOne = "";
 	private String playerTwo = "";
+	private int charNum = 0;
+	private int mode = 0;
+	
 	private int curPlayer = 1;
 	private boolean win = false;
 	private boolean fail = false;
@@ -54,6 +59,8 @@ public class QuartoGame extends JPanel {
 	private List<QPiece> tallQPieces = new ArrayList<QPiece>();
 	private List<QPiece> shortQPieces = new ArrayList<QPiece>();
 	private QPiece[][] boardArray = new QPiece[4][4];
+	private DnDListener listener;
+	private DnDListener listener2;
 
 	public QuartoGame() {
 
@@ -94,8 +101,8 @@ public class QuartoGame extends JPanel {
 		createAndAddPieceTall(BLACK_PIECE, CYLND_PIECE, TALL_PIECE, FILLED_PIECE, X_BOARD_START + PIECE_OFFSET_X * 3,
 				Y_BOARD_START + PIECE_OFFSET_Y * 12);
 
-		DnDListener listener = new DnDListener(this.shortQPieces, this);
-		DnDListener listener2 = new DnDListener(this.tallQPieces, this);
+		listener = new DnDListener(this.shortQPieces, this);
+		listener2 = new DnDListener(this.tallQPieces, this);
 		this.addMouseListener(listener);
 		this.addMouseMotionListener(listener);
 		this.addMouseListener(listener2);
@@ -106,7 +113,19 @@ public class QuartoGame extends JPanel {
 		JPanel p1 = new JPanel(new GridLayout(7, 1, 10, 10));
 		JLabel l1 = new JLabel("Welcome to Quarto!", JLabel.CENTER);
 		JTextField t1 = new JTextField("Enter Player 1 Name: ", JLabel.CENTER);
+		t1.addMouseListener(new MouseAdapter(){
+            @Override
+            public void mouseClicked(MouseEvent e){
+                t1.setText("");
+            }
+        });
 		JTextField t2 = new JTextField("Enter Player 2 Name: ", JLabel.CENTER);
+		t2.addMouseListener(new MouseAdapter(){
+            @Override
+            public void mouseClicked(MouseEvent e){
+                t2.setText("");
+            }
+        });
 		JComboBox c1 = new JComboBox();
 		c1.addItem("Select Number of Characteristics");
 		c1.addItem("1");
@@ -133,25 +152,33 @@ public class QuartoGame extends JPanel {
 		mainFrame.add(p1);
 		start.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				if (t1.getText().isEmpty()) {
-					playerOne = "Player One";
-				}
-				else {
-					playerOne = t1.getText();
-				}
-				if (t1.getText().isEmpty()) {
-					playerTwo = "Player Two";
-				}
-				else {
-					playerTwo = t2.getText();
-				}
 				JFrame gameFrame = new JFrame("The Game of Quarto");
-				gameFrame.add(new QuartoGame());
+				QuartoGame game = new QuartoGame();
+				gameFrame.add(game);
 				gameFrame.setResizable(false);
 				gameFrame.setSize(525, 1000);
 				mainFrame.dispose();
 				gameFrame.setVisible(true);
 				gameFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+				String p1, p2;
+				int charNum, mode;
+				charNum = c1.getSelectedIndex();
+				mode = c2.getSelectedIndex();
+				if (t1.getText().isEmpty() || t1.getText().equals("Enter Player 1 Name: ")) {
+					p1 = "Player One";
+				}
+				else {
+					p1 = t1.getText();
+				}
+				if (t2.getText().isEmpty() || t2.getText().equals("Enter Player 2 Name: ")) {
+					p2 = "Player Two";
+				}
+				else {
+					p2 = t2.getText();
+				}
+				
+				game.updateInfo(p1, p2, charNum, mode);
+				game.updateDnd();
 			}
 		});
 		inst.addActionListener(new ActionListener() {
@@ -277,12 +304,34 @@ public class QuartoGame extends JPanel {
 		}
 	}
 	
+	public void updateInfo(String p1, String p2, int charNum, int mode) {
+		playerOne = p1;
+		playerTwo = p2;
+		this.charNum = charNum;
+		this.mode = mode;
+	}
+	
+	public void updateDnd() {
+		listener.updateDnD();
+		listener2.updateDnD();
+	}
+	
 	public void slotPiece(QPiece piece, int i, int j) {
 		boardArray[i][j] = piece;
 	}
 	
 	public QPiece[][] getBoardArray() {
 		return boardArray;
+	}
+	
+	public String[] getPlayerNames() {
+		String[] playerNames = {playerOne, playerTwo};
+		return playerNames;
+	}
+	
+	public int[] getGameInfo() {
+		int[] gameInfo = {charNum, mode};
+		return gameInfo;
 	}
 	
 	protected void paintComponent(Graphics g) {
@@ -343,15 +392,20 @@ public class QuartoGame extends JPanel {
 			myGraphics.setColor(new Color(90, 220, 100));
 			myGraphics.fill(winnerBox);
 			myGraphics.setColor(Color.BLACK);
-			myGraphics.drawString("You won!", 150, 120);
+			String winString;
+			if (curPlayer == 1) {
+				winString = playerOne + " won!";
+			}
+			else {
+				winString = playerTwo + " won!";
+			}
+			myGraphics.drawString(winString, 100, 120);
 		}
 		if (fail) {
 			myGraphics.setColor(Color.RED);
 			myGraphics.setFont(new Font("Times New Roman", Font.BOLD, 80));
 			myGraphics.drawString("X", 220, 910);
 		}
-		
-		// TODO add quarto button to to determine if player has a win  
 	}
 
 	public static void main(String[] args) {
